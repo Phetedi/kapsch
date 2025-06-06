@@ -1,0 +1,91 @@
+Step-by-Step: Custom Partitioning in RHEL 8 Installer
+✅ 1. At the “Installation Summary” screen
+Click “Installation Destination”.
+
+✅ 2. Select the Disk
+Choose your disk (e.g., /dev/sda or /dev/nvme0n1).
+
+Select: Custom under “Storage Configuration”.
+
+Click Done (top left).
+
+🧱 Recommended Partition Layout (LVM)
+Mount Point	Type	Size	Description
+/boot	Standard partition	1 GB	Required for boot files
+/	LVM Logical Volume	15–20 GB	Root filesystem
+swap	LVM Logical Volume	2–4 GB	Virtual memory
+/home	LVM Logical Volume	Remaining space	Optional (if multi-user)
+
+✅ 3. Create Partitions
+🔹 Create /boot
+Click “Click here to create them automatically” (optional) or:
+
+Click + to add a mount point.
+
+Mount point: /boot
+
+Desired capacity: 1 GiB
+
+Device Type: Standard Partition
+
+File System: xfs
+
+Click Add mount point
+
+🔹 Create Volume Group
+If not already prompted:
+
+Click “Modify” > Select LVM.
+
+Create a Volume Group (name like rhel or vg0).
+
+Set all LVM partitions to use this VG.
+
+🔹 Create / (Root)
+Click + > Mount point: /
+
+Desired capacity: 15 GiB (or more if space allows)
+
+Device type: LVM
+
+File system: xfs
+
+Click Add mount point
+
+🔹 Create swap
+Click + > Mount point: swap
+
+Desired capacity: 2–4 GiB (match RAM size if unsure)
+
+Device type: LVM
+
+Click Add mount point
+
+🔹 (Optional) Create /home
+If you want a separate home:
+
+Click + > Mount point: /home
+
+Use the remaining space or specify size.
+
+Device type: LVM
+
+Click Add mount point
+
+✅ 4. Review & Accept Changes
+Check the summary of changes.
+
+Click Done.
+
+Then click Accept Changes.
+
+✅ 5. Continue with Installation
+Proceed to:
+
+Set root password
+
+Create user
+
+Enable networking
+
+Click Begin Installation

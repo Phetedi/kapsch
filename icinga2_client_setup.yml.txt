@@ -1,0 +1,110 @@
+icinga2_client_setup.yml
+
+
+---
+- name: Setup Icinga2 client node
+  hosts: all
+  become: true
+  vars:
+    icinga_repo_file: /etc/yum.repos.d/icinga.repo
+    icinga_repo_url: "https://mok:Qm9C@ext-repo-eu.kapschtraffic.com/artifactory/rpm--global-services--icinga2-rhel8/"
+    icinga_master_host: 10.20.6.185
+    icinga_api_user: admin
+    icinga_api_pass: admin
+    icinga_api_port: 5665
+
+  tasks:
+
+    - name: Create Icinga repo file
+      copy:
+        dest: "{{ icinga_repo_file }}"
+        content: |
+          [icinga-stable-release]
+          name=icinga-stable-release
+          baseurl={{ icinga_repo_url }}
+          enabled=1
+          gpgcheck=0
+
+    - name: Enable codeready-builder repo
+      shell: |
+        ARCH=$(/bin/arch)
+        OSVER=$(. /etc/os-release; echo "${VERSION_ID%%.*}")
+        subscription-manager repos --enable "codeready-builder-for-rhel-${OSVER}-${ARCH}-rpms"
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Install EPEL release
+      dnf:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        state: present
+
+    - name: Install required packages
+      dnf:
+        name:
+          - dnf-command(config-manager)
+          - icinga2
+          - nagios-plugins-all
+          - icinga2-selinux
+        state: present
+
+    - name: Get hostname (FQDN)
+      ansible.builtin.command: hostname -f
+      register: fqdn_result
+
+    - name: Request Icinga ticket from master
+      uri:
+        url: "https://{{ icinga_master_host }}:{{ icinga_api_port }}/v1/actions/generate-ticket"
+        method: POST
+        user: "{{ icinga_api_user }}"
+        password: "{{ icinga_api_pass }}"
+        force_basic_auth: yes
+        headers:
+          Accept: "application/json"
+        body_format: json
+        body:
+          cn: "{{ fqdn_result.stdout }}"
+        validate_certs: no
+      register: ticket_response
+
+    - name: Extract ticket value
+      set_fact:
+        icinga_ticket: "{{ ticket_response.json.results[0].ticket }}"
+
+    - name: Generate Icinga cert
+      command: icinga2 pki new-cert --cn {{ fqdn_result.stdout }} --key /var/lib/icinga2/certs/{{ fqdn_result.stdout }}.crt
+
+    - name: Save Icinga cert from master
+      command: >
+        icinga2 pki save-cert
+        --host {{ icinga_master_host }}
+        --port {{ icinga_api_port }}
+        --key /var/lib/icinga2/certs/{{ fqdn_result.stdout }}.key
+        --cert /var/lib/icinga2/certs/{{ fqdn_result.stdout }}.crt
+        --trustedcert /var/lib/icinga2/certs/ca.crt
+
+    - name: Setup Icinga2 node
+      command: >
+        icinga2 node setup
+        --cn {{ fqdn_result.stdout }}
+        --endpoint "s-16-icinga2,{{ icinga_master_host }},{{ icinga_api_port }}"
+        --zone {{ fqdn_result.stdout }}
+        --parent_zone master
+        --parent_host {{ icinga_master_host }}
+        --accept-commands
+        --accept-config
+        --trustedcert /var/lib/icinga2/certs/ca.crt
+        --ticket {{ icinga_ticket }}
+
+    - name: Restart Icinga2 service
+      systemd:
+        name: icinga2
+        state: restarted
+        enabled: true
+
+    - name: Check Icinga2 status
+      systemd:
+        name: icinga2
+        register: icinga_status
+
+    - name: Display Icinga2 service status
+      debug:
+        var: icinga_status

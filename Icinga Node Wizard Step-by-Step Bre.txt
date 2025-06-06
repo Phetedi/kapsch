@@ -1,0 +1,59 @@
+Icinga Node Wizard Step-by-Step Breakdown
+1. Get the system's FQDN
+
+HOST=$(hostname -f)
+Gets the fully qualified domain name (FQDN) of the system, e.g., host01.domain.com.
+This HOST value is used as the common name (CN) and zone name for the Icinga agent setup.
+
+
+2. Request a ticket from the Icinga Master
+KEY=$(curl -k -s -u admin:admin -H 'Accept: application/json' -X POST \'https://10.200.8.34:5665/v1/actions/generate-ticket' \-d '{ "cn": "'$HOST'" }')
+This makes a POST request to the Icinga master’s REST API to request a ticket for this client.
+
+-u admin:admin: uses the master’s API credentials.
+
+-k: ignores certificate validation (self-signed SSL).
+
+-d '{ "cn": "'$HOST'" }': passes the hostname as the CN.
+
+The response contains a ticket used to authenticate the agent.
+
+3. Extract the ticket
+TICKET=$(echo $KEY | grep ticket | awk '{print $4}' | tr -d \')
+Extracts the actual ticket string from the JSON-like response.
+
+te: This is a fragile way to parse JSON — jq is preferred for real-world usage.
+
+. Create a certificate for the client
+icinga2 pki new-cert --cn $HOST --key /var/lib/icinga2/certs/$HOST.crt
+Generates a new certificate and private key for the client.
+
+CN is the hostname.
+
+Saves to: /var/lib/icinga2/certs/
+
+5. Save the CA cert from the master
+
+icinga2 pki save-cert --host 10.200.8.34 --port 5665 \--key /var/lib/icinga2/certs/$HOST.key \--cert /var/lib/icinga2/certs/$HOST.crt \--trustedcert /var/lib/icinga2/certs/ca.crt
+Contacts the master and downloads its CA certificate.
+
+Saves it to /var/lib/icinga2/certs/ca.crt.
+
+6. Register the agent with the master
+icinga2 node setup \--cn $HOST \--endpoint "INF-OBSERV-2.infra.natras.ch,10.200.8.34,5665" \--zone $HOST \--parent_zone master \--parent_host 10.200.8.34 \--accept-commands \--accept-onfig \--trustedcert /var/lib/icinga2/certs/ca.crt \--ticket ${TICKET}
+Configures the agent with:
+
+Its own zone: same as the hostname.
+
+Parent endpoint and zone: the master (INF-OBSERV-2.infra.natras.ch).
+
+Uses the ticket for secure authentication.
+
+Enables acceptance of commands and configuration from the master.
+
+Uses the CA certificate to trust the master.
+
+7. Restart and check Icinga agent
+systemctl restart icinga2
+systemctl status icinga2
+Restarts the Icinga 2 agent and verifies that it’s running.

@@ -1,0 +1,33 @@
+Icinga2
+https://10.254.108.4/icingaweb2
+
+
+Install Cherwell,
+
+in setting 
+
+mailto:root/kapsch@2019
+
+
+
+BGR  : ITS and Digitoll
+
+BG\molekep and BG2\molekep has been created, pass on mbx.
+
+H@llo_2025!
+
+the SRVA2232 address you will get it from icinga, but this does not matter as you need to change the service template for the disks
+ 
+go to CRME
+ 
+jump to 10.0.1.50
+ 
+then from there jump to srva5115
+ 
+then access icinga on https://srva5113/icingaweb2
+ 
+you need to be part of the icinga2-admins group on active directory
+ 
+use your username and password for active directory to login
+ 
+make sure that you change the templates, not the services assigned to the hosts

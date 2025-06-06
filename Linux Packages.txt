@@ -1,0 +1,62 @@
+Packages
+
+📦 Common Utility Packages
+Package	Purpose / Usage
+git	Version control tool for managing source code (e.g., GitHub, GitLab).
+wget	Command-line utility to download files from the internet.
+curl	Transfer data to/from URLs, APIs, etc. Supports many protocols.
+nano	Simple command-line text editor.
+vim	More advanced command-line text editor.
+tree	Displays directory structure in a tree-like format.
+htop	Interactive system-monitoring tool (like top but better).
+tmux	Terminal multiplexer — run multiple sessions in one terminal.
+zip/unzip	Archive/unarchive files.
+
+🛠️ System Administration / Tools
+Package	Purpose / Usage
+lsof	Lists open files (useful for troubleshooting file/socket issues).
+net-tools	Legacy networking tools like ifconfig, netstat.
+nmap	Network scanner — useful for security auditing, port scanning.
+strace	Traces system calls made by programs (for debugging).
+policycoreutils	Core SELinux management tools (semanage, etc.).
+firewalld	Firewall management tool (uses iptables or nftables under the hood).
+bash-completion	Tab-completion for commands and scripts.
+
+🌐 Web/Networking
+Package	Purpose / Usage
+nginx	Lightweight web server and reverse proxy.
+httpd	Apache web server.
+bind-utils	DNS tools like dig, host, nslookup.
+telnet	Basic tool to test port connectivity (not encrypted; use nc or curl instead).
+
+🐍 Programming Languages and Dev Tools
+Package	Purpose / Usage
+python3	Installs Python 3.
+python3-pip	Package manager for Python.
+gcc	GNU Compiler Collection (for building C/C++ programs).
+make	Automation tool often used in software building.
+java-1.8.0-openjdk	Java runtime and development kit.
+
+🐳 Containers / Virtualization
+Package	Purpose / Usage
+podman	Daemonless container engine (RHEL-compatible alternative to Docker).
+docker (via script)	Popular container engine (requires custom install).
+virt-install	Tool for creating virtual machines via CLI (libvirt).
+
+Example Ansible Task to Install a Group of These
+yaml
+Copy
+Edit
+    - name: Install useful packages
+      dnf:
+        name:
+          - git
+          - wget
+          - curl
+          - vim
+          - htop
+          - python3
+          - python3-pip
+          - gcc
+          - nginx
+        state: present

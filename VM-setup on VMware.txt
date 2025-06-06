@@ -1,0 +1,94 @@
+VM-setup on VMware
+
+full process to delete the Oracle Linux 9 VM and create a new VM with RHEL 8 from scratch on your VMware ESXi host.
+
+🛠️ PART 1: Delete the Existing VM
+✅ Step 1: Power Off the VM
+In the ESXi web interface, go to Virtual Machines.
+
+Select your Oracle Linux 9 VM.
+
+Click Power Off (or gracefully shut down from inside the VM using sudo shutdown -h now).
+
+✅ Step 2: Delete the VM
+Once the VM is powered off, click Actions > Delete.
+
+Confirm deletion:
+
+This will delete the VM and all its virtual disk files (VMDKs).
+
+Make sure any needed data is already backed up.
+
+🛠️ PART 2: Create a New VM for RHEL 8
+✅ Step 3: Start New VM Wizard
+In the ESXi web UI, go to Virtual Machines.
+
+Click Create/Register VM.
+
+Select Create a new virtual machine, click Next.
+
+✅ Step 4: Name and Compatibility
+Name: rhel8-vm (or any name you want).
+
+Compatibility: Leave as default (ESXi 7.0+ recommended).
+
+Guest OS Family: Linux
+
+Guest OS Version: Red Hat Enterprise Linux 8 (64-bit)
+
+Click Next.
+
+✅ Step 5: Select Storage
+Choose the datastore to store the VM files.
+
+Click Next.
+
+✅ Step 6: Configure Hardware
+Customize as needed:
+
+CPUs: 2 (recommended)
+
+Memory: 2–4 GB minimum
+
+Hard Disk: 20 GB or more (depends on your needs)
+
+Network Adapter: Connected to your virtual network
+
+CD/DVD Drive 1:
+
+Change Backing to: Datastore ISO File
+
+Browse and select your uploaded RHEL 8 ISO.
+
+Ensure "Connect at power on" is checked.
+
+Click Next, then Finish.
+
+🛠️ PART 3: Install RHEL 8
+✅ Step 7: Power on and Begin Installation
+Go to your new VM and power it on.
+
+Click Console to view the screen.
+
+It should boot into the RHEL 8 installer.
+
+✅ Step 8: Install Red Hat Enterprise Linux 8
+Select Install Red Hat Enterprise Linux 8 and press Enter.
+
+Follow the installer steps:
+
+Choose language and keyboard.
+
+Set Installation Destination (use automatic partitioning or custom).
+
+Configure networking and hostname.
+
+Set root password and create a user.
+
+Click Begin Installation.
+
+✅ Step 9: After Install
+Once installed, reboot the VM.
+
+Detach the ISO from the CD/DVD drive to avoid booting from it again.
+

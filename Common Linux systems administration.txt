@@ -1,0 +1,356 @@
+Common Linux systems administration tasks
+
+1. File and Directory Management
+
+#Tree of current directory
+tree
+
+#Tree of specific directory
+tree /etc/
+
+List Files:
+ls -l       # Detailed list
+ls -a       # Show hidden files
+
+#List all including hidden
+eza --all
+
+#List tree structure
+eza --long --tree --level=3
+
+#List headers, icons, and Git statuses
+eza --long --header --icons --git
+
+Change Directory:
+cd /path/to/directory
+
+Create a Directory:
+mkdir directory_name
+
+Remove a File/Directory:
+rm file_name          # Remove file
+rm -r directory_name  # Remove directory recursively
+
+Copy Files:
+cp source_file destination_file
+cp -r source_directory destination_directory
+
+#Copy a file or directory
+rsync -av source/ destination/ 
+
+#Copy over SSH with transfer compression
+rsync -avz source/ user@remote:/destination
+
+Move/Rename Files:
+mv old_name new_name
+mv file /path/to/destination/
+
+#################################################################################################
+
+2. File Content Operations
+
+View File Content:
+cat filename        # Display whole file
+bat filename	    # Display whole file
+more filename       # View file with pagination
+less filename       # Scroll through file with more control
+tail -n 10 filename # Last 10 lines
+head -n 10 filename # First 10 lines
+
+Search Inside Files:
+grep 'pattern' filename
+grep -r 'pattern' /path/to/directory  # Recursive search
+
+#Search using regular expression pattern match
+#Matches pattern anywhere in name or path
+fd "pattern" /search/path
+fd ".log" /var/log
+
+#Search using glob pattern matching
+#Matches using traditional wildcard notation
+fd -- glob "*.log"
+fd --glob "specific.file.txt"
+
+# Format data.txt into a table
+cat data.txt | column -t
+
+#Format data into a table and run through more
+cat data.txt | column -t | more
+
+#Specify comma separator and make a table
+column -s, -t < file.csv
+
+#Specify semicolon separator and make a table
+column -s; -t < file.csv
+
+#Truncate data in column 1 if needed
+column -s, -t --table-truncate 1 < file.csv
+
+#See help for full explanation of switches
+Column --help
+
+
+Edit Files:
+nano filename     # Simple editor
+vim filename      # Advanced editor
+
+##################################################################################################
+
+3. User Management
+
+Add New User:
+sudo useradd -m username
+sudo passwd username
+
+Delete User:
+sudo userdel username
+sudo userdel -r username  # Remove user's home directory
+
+Change User:
+su - username
+
+Add User to Group:
+sudo usermod -aG groupname username
+
+##################################################################################################
+
+4. File Permissions
+
+Change Permissions:
+chmod 755 filename  # rwxr-xr-x
+chmod 644 filename  # rw-r--r--
+
+Change Ownership:
+sudo chown user:group filename
+sudo chown -R user:group directory_name  # Recursive
+
+##################################################################################################
+
+5. Process Management
+
+View Running Processes:
+ps aux
+top           # Interactive process viewer
+htop          # Improved version of top (if installed)
+
+Kill a Process:
+kill PID
+kill -9 PID   # Force kill
+
+Background/Foreground Tasks:
+command &           # Run in background
+fg                  # Bring process to foreground
+bg                  # Resume a suspended job in background
+
+#########################################################################################################
+
+6. Disk Usage and Space Management
+
+Check Disk Space:
+df -h             # Human-readable format
+
+Check Disk Usage:
+du
+ncdu  
+
+Check Directory Size:
+du -sh /path/to/directory
+
+
+Mount and Unmount Drives:
+mount /dev/sdX /mnt/mountpoint
+umount /mnt/mountpoint
+
+#########################################################################################################
+
+7. Networking
+
+Network Manager CLI (nmcli):
+nmcli dev status       # Check device status
+nmcli con show         # List active connections
+nmcli con up id "connection_name"  # Bring up a connection
+
+Check IP Address:
+
+ip a               # Detailed IP address info
+ifconfig           # Legacy command
+
+Test Network Connection:
+ping (IP, hostname, or site)
+
+Download Files:
+wget http://example.com/file
+curl -O http://example.com/file
+
+##########################################################################################################
+
+8. Package Management (Debian/Ubuntu)
+
+Update Packages:
+sudo apt update
+sudo apt upgrade
+
+Install Packages:
+sudo apt install package_name
+
+Remove Packages:
+sudo apt remove package_name
+sudo apt purge package_name  # Remove config files as well
+
+Search for a Package:
+apt search package_name
+
+
+Package Management with DNF
+
+Update System:
+sudo dnf update
+
+Install a Package:
+sudo dnf install package_name
+
+Remove a Package:
+sudo dnf remove package_name
+
+Search for a Package:
+dnf search package_name
+
+
+##########################################################################################################
+
+9. System Monitoring
+
+Check System Processes:
+top
+htop
+
+Check System Uptime:
+uptime
+
+Check Memory Usage:
+free -h
+
+System Logs:
+sudo journalctl -xe           # View detailed logs
+tail -f /var/log/messages     # View log file in real-time
+tail -f /var/log/syslog    # Monitor system log
+
+Check Resource Usage:
+vmstat
+iostat
+
+#Watch disk usage
+watch df -h
+
+#Monitor directory for file changes
+watch ls -l
+
+#Watch memory and highlight changes
+watch -d free -m
+
+#Monitor file copy progress
+pv source_file > destination_file
+
+#Monitor file compression progress
+pv file_to_compress | gzip > compressed_file.gz
+
+
+##########################################################################################################
+
+10. Crontab (Scheduling Tasks)
+
+Edit Crontab:
+crontab -e
+
+Crontab Format:
+* * * * * /path/to/command   # Minute, Hour, Day, Month, Day of Week
+
+##########################################################################################################
+
+
+11. Service Management (systemd)
+
+Start/Stop/Restart a Service:
+sudo systemctl start service_name
+sudo systemctl stop service_name
+sudo systemctl restart service_name
+
+Enable/Disable a Service at Boot:
+sudo systemctl enable service_name
+sudo systemctl disable service_name
+
+Check Service Status:
+sudo systemctl status service_name
+
+##########################################################################################################
+
+12. Firewall Management (firewalld)
+
+Check Firewall Status:
+sudo firewall-cmd --state
+
+Allow/Block Ports:
+sudo firewall-cmd --zone=public --add-port=80/tcp --permanent
+sudo firewall-cmd --reload
+
+List Open Ports:
+sudo firewall-cmd --list-ports
+
+
+Check if a Specific Port is Allowed
+sudo firewall-cmd --zone=public --query-port=PORT/protocol
+Replace PORT with the port number and protocol with tcp or udp. 
+
+For example, to check if port 8080/tcp is allowed:
+sudo firewall-cmd --zone=public --query-port=8080/tcp
+
+If the port is allowed, the command will return yes. If not, it will return no.
+
+Check Firewall Rules (Detailed View)
+For a more detailed view of all active rules:
+sudo firewall-cmd --list-all
+
+This shows all services, ports, and rich rules allowed for the active zone.
+
+For Legacy or Custom Systems: Use iptables (if needed)
+In some cases, iptables can also be checked if you're using custom or legacy configurations:
+
+sudo iptables -L -n -v | grep PORT
+Replace PORT with the specific port number.
+
+#########################################################################################################
+
+13. SELinux Management
+
+Check SELinux Status:
+sestatus
+
+Change SELinux Mode:
+sudo setenforce 0    # Set to permissive mode
+sudo setenforce 1    # Set to enforcing mode
+
+##########################################################################################################
+
+14. TextEditor VI / NANO
+
+x : deletes a charactor
+dw : deletes a word
+dd : deletes the entire line
+Esc u : undo the deletion
+
+This cheat sheet can be a handy reference for performing basic Linux administration tasks quickly!
+
+###########################################################################################################
+
+tldr - Simplified Manual Pages For Common Commands
+
+
+
+
+
+
+
+
+
+
+

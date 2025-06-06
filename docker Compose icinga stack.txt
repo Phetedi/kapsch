@@ -1,0 +1,115 @@
+version: '3.8'
+
+networks:
+  monitoring_network:
+    driver: bridge
+
+volumes:
+  icinga2_data:
+  icingadb_data:
+  postgres_data:
+  influxdb_data:
+  grafana_data:
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: icinga
+      POSTGRES_PASSWORD: icinga
+      POSTGRES_DB: icinga
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitoring_network
+
+  icingadb:
+    image: ghcr.io/icinga/icingadb:latest
+    container_name: icingadb
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      ICINGADB_DATABASE_HOST: postgres
+      ICINGADB_DATABASE_PORT: 5432
+      ICINGADB_DATABASE_USER: icinga
+      ICINGADB_DATABASE_PASSWORD: icinga
+      ICINGADB_DATABASE_NAME: icinga
+    volumes:
+      - icingadb_data:/var/lib/icingadb
+    networks:
+      - monitoring_network
+
+  icinga2:
+    image: ghcr.io/icinga/icinga2:latest
+    container_name: icinga2
+    restart: always
+    depends_on:
+      - icingadb
+    environment:
+      ICINGA2_FEATURES_ENABLED: "api checker mainlog notification"
+    volumes:
+      - icinga2_data:/var/lib/icinga2
+    networks:
+      - monitoring_network
+
+  icingaweb2:
+    image: ghcr.io/icinga/icingaweb2:latest
+    container_name: icingaweb2
+    restart: always
+    depends_on:
+      - icinga2
+    environment:
+      ICINGAWEB2_ADMIN_USER: admin
+      ICINGAWEB2_ADMIN_PASS: admin
+    networks:
+      - monitoring_network
+
+  director:
+    image: ghcr.io/icinga/icingaweb2-module-director:latest
+    container_name: director
+    restart: always
+    depends_on:
+      - icingaweb2
+    networks:
+      - monitoring_network
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    restart: always
+    environment:
+      INFLUXDB_DB: icinga2
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: admin
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    networks:
+      - monitoring_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    depends_on:
+      - influxdb
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring_network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "443:443"
+    networks:
+      - monitoring_network

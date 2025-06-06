@@ -1,0 +1,84 @@
+NGINX Copy
+
+events {}
+
+http {
+    upstream backend_servers {
+        server prometheus:9090;
+     }
+
+    server {
+        listen 443 ssl;
+        server_name localhost;
+
+        ssl_certificate     /etc/nginx/ssl/nginx-selfsigned.crt;
+        ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key;
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+
+        location /prometheus/ {
+            rewrite ^/prometheus(/.*)$ $1 break;  # Remove /prometheus from the path
+            proxy_pass http://prometheus:9090/;   # Forward to prometheus container
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-For $remote_addr;
+
+            # Fix UI broken links
+            sub_filter '"/' '"/prometheus/';
+            sub_filter_once off;
+        }
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        return 301 https://$host$request_uri;
+    }
+}
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+events {}
+
+http {
+
+    server {
+        listen 443 ssl;
+        server_name s-11-dockernode-phillip-linux9 172.20.6.180 localhost;
+
+        ssl_certificate     /etc/nginx/ssl/nginx-selfsigned.crt;
+        ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key;
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            return 404;
+        }
+
+        location /prometheus/ {
+            proxy_pass http://prometheus:9090/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-For $remote_addr;
+
+            rewrite ^/prometheus(/.*)$ $1 break;
+
+           #sub_filter 'href="/' 'href="/prometheus/';
+           #sub_filter 'src="/' 'src="/prometheus/';
+           #sub_filter_once off;
+        }
+
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        return 301 https://$host$request_uri;
+    }
+}

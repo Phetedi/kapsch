@@ -1,0 +1,63 @@
+ Icinga Web 2 Uninstallation (RHEL/Oracle Linux 9)
+🔴 1. Stop the Web Server (Apache or NGINX)
+Depending on your setup, stop your web server:
+
+If using Apache:
+
+sudo systemctl stop httpd
+sudo systemctl disable httpd
+
+If using NGINX:
+
+sudo systemctl stop nginx
+sudo systemctl disable nginx
+
+🗑️ 2. Remove Icinga Web 2 Packages
+
+Check which packages are installed:
+
+dnf list installed | grep icingaweb2
+
+Remove them:
+
+sudo dnf remove icingaweb2 icingacli
+
+🧼 3. Delete Configuration Files and Cache
+Remove config files, logs, and runtime data:
+
+sudo rm -rf /etc/icingaweb2
+sudo rm -rf /usr/share/icingaweb2
+sudo rm -rf /var/log/icingaweb2
+sudo rm -rf /var/lib/icingaweb2
+sudo rm -rf /var/cache/icingaweb2
+
+Also remove Apache or NGINX config files if customized:
+
+
+# Apache
+sudo rm -f /etc/httpd/conf.d/icingaweb2.conf
+
+# NGINX
+sudo rm -f /etc/nginx/conf.d/icingaweb2.conf
+
+🗄️ 4. Drop Icinga Web 2 PostgreSQL Database and User (if separate)
+If Icinga Web 2 uses a separate PostgreSQL database, log in as postgres and remove:
+
+sudo -u postgres psql
+Then:
+
+sql
+
+-- Replace with your actual DB/user names if different
+DROP DATABASE icingaweb2;
+DROP USER icingaweb2;
+\q
+
+✅ 5. Confirm Cleanup
+Check that no Icinga Web 2 directories remain:
+
+sudo find / -name "*icingaweb2*" 2>/dev/null
+Ensure no active services:
+
+systemctl status httpd
+systemctl status nginx

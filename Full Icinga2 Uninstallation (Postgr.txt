@@ -1,0 +1,57 @@
+Full Icinga2 Uninstallation (PostgreSQL)
+🔴 1. Stop and Disable Icinga2
+
+sudo systemctl stop icinga2
+sudo systemctl disable icinga2
+
+🧼 2. Remove Icinga2 Packages
+
+sudo dnf remove icinga2 icinga2-ido-pgsql icinga2-common
+You can list installed Icinga-related packages to double-check:
+
+dnf list installed | grep icinga
+
+🗑️ 3. Delete Icinga2 Configuration and State Files
+
+sudo rm -rf /etc/icinga2
+sudo rm -rf /var/log/icinga2
+sudo rm -rf /var/lib/icinga2
+sudo rm -rf /var/spool/icinga2
+
+👤 4. Remove Icinga User and Group (Optional)
+Only if not used by any other services:
+
+sudo userdel icinga
+sudo groupdel icinga
+
+🗄️ 5. Drop the PostgreSQL Database and User
+a. Switch to the postgres user
+
+sudo -u postgres psql
+
+b. Drop the Icinga database and user:
+sql
+
+-- Drop the database
+DROP DATABASE icinga;
+
+-- Drop the user (if exists)
+DROP USER icinga;
+Note: If you used a different database name or user, adjust accordingly (\l and \du will list databases and users).
+
+c. Exit psql:
+sql
+
+\q
+
+✅ 6. Verify Removal
+Check service:
+
+systemctl status icinga2
+Should say Unit icinga2.service could not be found.
+
+Check PostgreSQL:
+
+sudo -u postgres psql -c "\l"
+sudo -u postgres psql -c "\du"
+Make sure icinga DB and user are gone.
